@@ -24,7 +24,7 @@ docker-build: ## Build docker image
 	@docker build --no-cache -t $(NAME) .
 
 docker-run: ## Run discord bot inside docker container
-	@docker run --privileged --network=host --env-file .env --name twiner $(NAME)
+	@docker run --privileged --network=host --name twiner $(NAME)
 
 docker-sh: ## Shell into docker container
 	@docker run --network=host --privileged -it $(NAME) sh
