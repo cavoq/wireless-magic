@@ -1,12 +1,9 @@
-FROM ubuntu:latest
+FROM python:latest
 
-RUN apt-get update && \
-    apt-get -y install build-essential cmake
+RUN apt-get update
 
-COPY . /evil-twin
+COPY . /twiner
 
-WORKDIR /evil-twin
+WORKDIR /twiner
 
-RUN make build
-
-CMD ["./evil-twin"]
+RUN make run
