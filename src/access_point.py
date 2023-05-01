@@ -2,8 +2,9 @@ import subprocess
 import time
 from src.network_interface import NetworkInterface
 
+
 class AccessPoint:
-    
+
     def __init__(self, interface: NetworkInterface, ssid: str, password: str, channel: int = 6):
         self.interface = interface
         self.ssid = ssid
@@ -15,9 +16,9 @@ class AccessPoint:
             return False
         if not self._start_access_point():
             return False
-        
+
         time.sleep(5)
-        
+
         if not self._set_interface_mode("managed"):
             return False
 

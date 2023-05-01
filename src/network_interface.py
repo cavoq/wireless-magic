@@ -39,7 +39,17 @@ class NetworkInterface:
         return True
 
     def scan_access_points(self) -> List[str]:
-        pass 
+        cmd = f"sudo iwlist {self.name} scan"
+        result = subprocess.run(cmd.split(), capture_output=True, text=True)
+        if result.returncode != 0:
+            return []
+        output = result.stdout.strip().split('\n')
+        access_points = []
+        for i in range(len(output)):
+            if "ESSID:" in output[i]:
+                access_point = output[i].split("ESSID:")[1].strip().replace('"', '')
+                access_points.append(access_point)
+        return access_points
     
     def to_string(self) -> str:
         return f"Interface: {self.name}\nMAC Address: {self.mac_address}\nMode: {self.mode}"

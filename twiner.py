@@ -18,11 +18,12 @@ __________       _____________     __________________
    )_(   (_______)\_______/|/    )_)(_______/|/   \__/
    
    
-[+] Welcome to Twiner, a evil-twin attack bot.
+[+] Welcome to Twiner, a rogue access points attack bot.
 [clear] Clear the screen.
 [quit] Quit the program.
 [ifaces] Get list of available network interfaces.
 [iface <interface>] Set the network interface to use.
+[run] Run the bot.
 {colorama.Style.RESET_ALL}"""
     prompt = f"{colorama.Fore.BLUE}> {colorama.Style.RESET_ALL}"
 
@@ -44,6 +45,9 @@ __________       _____________     __________________
             return
         twiner_bot.set_capture_interface(arg)
         print(twiner_bot.capture_interface.to_string())
+
+    def do_run(self, arg=None):
+        twiner_bot.scan_access_points()
 
 
 class TwinerBot:
@@ -67,6 +71,10 @@ class TwinerBot:
                 self.capture_interface = interface
                 return True
         return False
+
+    def scan_access_points(self) -> None:
+        access_points = self.capture_interface.scan_access_points()
+        print(access_points)
 
 
 if __name__ == '__main__':
