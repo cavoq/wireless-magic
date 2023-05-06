@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 from typing import List
 
 
@@ -16,12 +17,16 @@ class NetworkInterface:
 
     def get_mac_address(self) -> str:
         mac_address_file: str = f"/sys/class/net/{self.name}/address"
-        with open(mac_address_file, "r") as f:
-            mac_address: str = f.read().strip()
+        if not os.path.exists(mac_address_file):
+            raise FileNotFoundError("MAC address file not found.")  
+        with open(mac_address_file, "r") as file:
+            mac_address: str = file.read().strip()
         return mac_address
 
     def get_mode(self) -> str:
         mode_file: str = f"/sys/class/net/{self.name}/type"
+        if not os.path.exists(mode_file):
+            raise FileNotFoundError("Mode file not found.")
         with open(mode_file, "r") as f:
             mode: str = f.read().strip()
         if mode == "1":
@@ -30,11 +35,15 @@ class NetworkInterface:
             return "monitor"
 
     def set_mode(self, mode: str) -> bool:
-        if mode != ("managed" or "monitor"):
+        if mode not in ["managed", "monitor"]:
             return False
-        cmd = f"sudo iwconfig {self.interface} mode {mode}"
+        cmd = f"sudo iwconfig {self.name} mode {mode}"
         result = subprocess.run(cmd.split(), capture_output=True)
+        print(result)
         if result.returncode != 0:
+            if b"Device or resource busy" in result.stderr:
+                time.sleep(1)
+                return self.set_mode(mode)
             return False
         return True
 
