@@ -1,3 +1,5 @@
+import subprocess
+import time
 import unittest
 from src.network_interface import NetworkInterface
 
@@ -9,6 +11,24 @@ class TestNetworkInterface(unittest.TestCase):
     def setUp(self):
         self.interface = NetworkInterface(MOCK_INTERFACE)
 
+    def test_reset_device(self):
+        # Perform a ping to make the device busy
+        ping_process = subprocess.Popen("ping google.com", shell=True)
+        time.sleep(1)  # Wait for ping to start
+
+        # Reset the device and check if it's not busy anymore
+        assert self.interface.reset(MOCK_INTERFACE) == True
+        assert self.interface.is_busy(MOCK_INTERFACE) == False
+        
+        # Stop the ping process
+        ping_process.kill()
+
+    def test_is_busy(self):
+        self.interface.reset()
+        subprocess.Popen("ping google.com", shell=True)
+        time.sleep(1)  # Wait for ping to start
+        assert self.interface.is_busy(MOCK_INTERFACE) == True
+        
     def test_get_mac_address(self):
         self.assertIsInstance(self.interface.get_mac_address(), str)
 

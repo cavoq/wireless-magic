@@ -64,7 +64,7 @@ class TwinerBot:
             if os.path.exists(os.path.join(net_dir, interface, "wireless")):
                 wifi_interfaces.append(NetworkInterface(interface))
         return wifi_interfaces
-
+        
     def set_capture_interface(self, interface_name: str) -> bool:
         for interface in self.wifi_interfaces:
             if interface.name == interface_name:
