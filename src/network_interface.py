@@ -2,7 +2,6 @@ import os
 import subprocess
 import time
 from typing import List
-from src.utils import down_network_manager
 
 
 class NetworkInterface:

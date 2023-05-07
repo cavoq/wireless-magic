@@ -13,7 +13,7 @@ class TestNetworkInterface(unittest.TestCase):
 
     def test_reset_device(self):
         # Perform a ping to make the device busy
-        ping_process = subprocess.Popen("ping google.com", shell=True)
+        ping_process = subprocess.Popen("ping google.com", stdout=subprocess.DEVNULL)
         time.sleep(1)  # Wait for ping to start
 
         # Reset the device and check if it's not busy anymore
@@ -25,9 +25,10 @@ class TestNetworkInterface(unittest.TestCase):
 
     def test_is_busy(self):
         self.interface.reset()
-        subprocess.Popen("ping google.com", shell=True)
+        ping_process = subprocess.Popen("ping google.com", stdout=subprocess.DEVNULL)
         time.sleep(1)  # Wait for ping to start
         assert self.interface.is_busy(MOCK_INTERFACE) == True
+        ping_process.kill()
         
     def test_get_mac_address(self):
         self.assertIsInstance(self.interface.get_mac_address(), str)
