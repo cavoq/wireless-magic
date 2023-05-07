@@ -40,23 +40,34 @@ class NetworkInterface:
         if self.is_busy():
             self.reset()
             self.set_mode(mode, retries=retries-1)
+        if mode == "monitor":
+            self.down()
         cmd = f"sudo iwconfig {self.name} mode {mode}"
         result = subprocess.run(cmd.split(), capture_output=True)
         if result.returncode != 0:
             return False
         return True
-
+        
+    def down(self) -> bool:
+        cmd = f"sudo ip link set down {self.name}"
+        result = subprocess.run(cmd.split(), capture_output=True)
+        if result.returncode != 0:
+            return False
+        return True
+    
+    def up(self) -> bool:
+        cmd = f"sudo ip link set up {self.name}"
+        result = subprocess.run(cmd.split(), capture_output=True)
+        if result.returncode != 0:
+            return False
+        return True
+    
     def reset(self) -> bool:
-        cmd = f"sudo ifdown {self.name} && sudo ifup {self.name}"
-        result = subprocess.run(cmd.split(), capture_output=True)
-        if result.returncode == 0:
-            return True
-        cmd = f"sudo modprobe -r {self.name} && sudo modprobe {self.name}"
-        result = subprocess.run(cmd.split(), capture_output=True)
-        time.sleep(2)  # Wait for device to come back up
-        if result.returncode == 0:
-            return True
-        return False
+        if not self.down():
+            return False
+        if not self.up():
+            return False
+        return True
 
     def is_busy(self) -> bool:
         cmd = f"ip link show {self.name}"
