@@ -1,6 +1,5 @@
 import os
 import subprocess
-import time
 from typing import List
 
 
@@ -47,21 +46,21 @@ class NetworkInterface:
         if result.returncode != 0:
             return False
         return True
-        
+
     def down(self) -> bool:
         cmd = f"sudo ip link set down {self.name}"
         result = subprocess.run(cmd.split(), capture_output=True)
         if result.returncode != 0:
             return False
         return True
-    
+
     def up(self) -> bool:
         cmd = f"sudo ip link set up {self.name}"
         result = subprocess.run(cmd.split(), capture_output=True)
         if result.returncode != 0:
             return False
         return True
-    
+
     def reset(self) -> bool:
         if not self.down():
             return False
