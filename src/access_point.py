@@ -13,15 +13,10 @@ class AccessPoint:
 
     def start(self) -> bool:
         if not self.interface.mode == "monitor":
-            return False
+            self.interface.set_mode("monitor")
         if not self._start_access_point():
             return False
-
         time.sleep(5)
-
-        if not self._set_interface_mode("managed"):
-            return False
-
         return True
 
     def stop(self) -> bool:
@@ -30,6 +25,8 @@ class AccessPoint:
         if result.returncode != 0:
             return False
 
+        if not self.interface.mode == "managed":
+            self.interface.set_mode("managed")
         return True
 
     def _set_interface_mode(self, mode: str) -> bool:
@@ -41,28 +38,27 @@ class AccessPoint:
         return True
 
     def _start_access_point(self) -> bool:
-        config = f"""
-        interface={self.interface.name}
-        driver=nl80211
-        ssid={self.ssid}
-        hw_mode=g
-        channel={self.channel}
-        macaddr_acl=0
-        auth_algs=1
-        ignore_broadcast_ssid=0
-        wpa=2
-        wpa_passphrase={self.password}
-        wpa_key_mgmt=WPA-PSK
-        wpa_pairwise=TKIP
-        rsn_pairwise=CCMP
-        """
-        config_file = f"/tmp/hostapd-{self.interface.name}.conf"
-        with open(config_file, "w") as f:
-            f.write(config)
+        with open("resources/hostapd-template.conf", "r") as f:
+            config_template = f.read()
 
+        config = config_template.replace(
+            "place_interface_here", self.interface.name
+        ).replace(
+            "place_ssid_here", self.ssid
+        ).replace(
+            "place_channel_here", str(self.channel)
+        ).replace(
+            "place_password_here", self.password
+        )
+
+        config_file = f"/tmp/hostapd-{self.interface.name}.conf"
+        with open(config_file, "w") as cfg_file:
+            cfg_file.write(config)
+
+        log_file = f"logs/{self.ssid}.log"
         cmd = ["sudo", "hostapd", config_file]
-        result = subprocess.run(cmd, capture_output=True)
-        if result.returncode != 0:
-            return False
+
+        with open(log_file, "w") as log:
+            subprocess.Popen(cmd, stdout=log, stderr=log)
 
         return True
