@@ -1,2 +1,2 @@
 # twiner
-Configurable evil twin written in C++ because python would be too easy.
+Configurable rogue access point collector written in python
