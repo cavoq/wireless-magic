@@ -1,5 +1,3 @@
-import subprocess
-import time
 import unittest
 from src.network_interface import NetworkInterface
 
