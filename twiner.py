@@ -1,6 +1,6 @@
 import cmd
 import re
-from typing import List
+from typing import Dict, List
 import colorama
 from src.network_interface import *
 from src.access_point import *
@@ -55,6 +55,7 @@ __________       _____________     __________________
 
     def do_run(self, arg=None):
         twiner_bot.scan_access_points()
+        twiner_bot.run()
 
 
 class TwinerBot:
@@ -62,9 +63,15 @@ class TwinerBot:
     def __init__(self):
         self.wifi_interfaces: List[NetworkInterface] = self.get_wifi_interfaces(
         )
-        self.access_points: List[AccessPoint] = []
+        self.access_points: Dict[str, AccessPoint] = {}
         self.capture_interface: NetworkInterface = None
 
+    def run(self):
+        self.access_points["TestAP"] = AccessPoint(
+            self.capture_interface, "TestAP", "testpassword", 6)
+        self.access_points.get("TestAP").start()
+        self.access_points.get("TestAP").start_sniffing()
+        
     def get_wifi_interfaces(self) -> List[NetworkInterface]:
         wifi_interfaces = []
         net_dir: str = "/sys/class/net"
@@ -83,7 +90,6 @@ class TwinerBot:
     def scan_access_points(self) -> None:
         cmd = f"sudo iwlist {self.capture_interface.name} scan"
         output = subprocess.check_output(cmd.split()).decode("utf-8")
-        print(output)
 
         essids = re.findall(r"ESSID:\"(.*)\"", output)
         channels = re.findall(r"Channel:(\d+)", output)
@@ -91,8 +97,7 @@ class TwinerBot:
         for essid, channel in zip(essids, channels):
             access_point = AccessPoint(
                 self.capture_interface, essid, "pass", channel)
-            self.access_points.append(access_point)
-            print(access_point.to_string())
+            self.access_points[essid] = access_point
 
 
 if __name__ == '__main__':

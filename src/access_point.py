@@ -56,7 +56,7 @@ class AccessPoint:
             "place_password_here", self.password
         )
 
-        config_file = f"/tmp/hostapd-{self.interface.name}.conf"
+        config_file = f"configs/hostapd-{self.interface.name}.conf"
         with open(config_file, "w") as cfg_file:
             cfg_file.write(config)
 
