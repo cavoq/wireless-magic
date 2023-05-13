@@ -1,5 +1,6 @@
 import subprocess
 import time
+from scapy.all import *
 from src.network_interface import NetworkInterface
 
 

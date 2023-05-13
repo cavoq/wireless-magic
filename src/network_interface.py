@@ -88,6 +88,7 @@ class NetworkInterface:
                 access_point = output[i].split(
                     "ESSID:")[1].strip().replace('"', '')
                 access_points.append(access_point)
+        print(access_points)
         return access_points
 
     def to_string(self) -> str:
