@@ -1,6 +1,9 @@
 import cmd
+import re
+from typing import List
 import colorama
 from src.network_interface import *
+from src.access_point import *
 
 
 colorama.init()
@@ -39,12 +42,16 @@ __________       _____________     __________________
             print(f"{colorama.Fore.GREEN}{interface.to_string()}", end="\n\n")
 
     def do_iface(self, arg=None):
-        if arg is None:
+        if twiner_bot.capture_interface is not None and arg in [None, ""]:
             print(
-                f"{colorama.Fore.RED}Please specify an interface.{colorama.Style.RESET_ALL}")
+                f"{colorama.Fore.RED}Selected interface is {twiner_bot.capture_interface.name}.{colorama.Style.RESET_ALL}")
+            return
+        if arg not in [interface.name for interface in twiner_bot.wifi_interfaces]:
+            print(
+                f"{colorama.Fore.RED}Please specify a valid interface.{colorama.Style.RESET_ALL}")
             return
         twiner_bot.set_capture_interface(arg)
-        print(twiner_bot.capture_interface.to_string())
+        print(f"{colorama.Fore.GREEN}Interface set to {arg}.{colorama.Style.RESET_ALL}")
 
     def do_run(self, arg=None):
         twiner_bot.scan_access_points()
@@ -55,6 +62,7 @@ class TwinerBot:
     def __init__(self):
         self.wifi_interfaces: List[NetworkInterface] = self.get_wifi_interfaces(
         )
+        self.access_points: List[AccessPoint] = []
         self.capture_interface: NetworkInterface = None
 
     def get_wifi_interfaces(self) -> List[NetworkInterface]:
@@ -64,7 +72,7 @@ class TwinerBot:
             if os.path.exists(os.path.join(net_dir, interface, "wireless")):
                 wifi_interfaces.append(NetworkInterface(interface))
         return wifi_interfaces
-        
+
     def set_capture_interface(self, interface_name: str) -> bool:
         for interface in self.wifi_interfaces:
             if interface.name == interface_name:
@@ -73,8 +81,18 @@ class TwinerBot:
         return False
 
     def scan_access_points(self) -> None:
-        access_points = self.capture_interface.scan_access_points()
-        print(access_points)
+        cmd = f"sudo iwlist {self.capture_interface.name} scan"
+        output = subprocess.check_output(cmd.split()).decode("utf-8")
+        print(output)
+
+        essids = re.findall(r"ESSID:\"(.*)\"", output)
+        channels = re.findall(r"Channel:(\d+)", output)
+
+        for essid, channel in zip(essids, channels):
+            access_point = AccessPoint(
+                self.capture_interface, essid, "pass", channel)
+            self.access_points.append(access_point)
+            print(access_point.to_string())
 
 
 if __name__ == '__main__':

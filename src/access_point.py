@@ -1,6 +1,7 @@
 import subprocess
+import threading
 import time
-from scapy.all import *
+from scapy.all import Dot11, Dot11Elt, sniff, sendp
 from src.network_interface import NetworkInterface
 
 
@@ -12,6 +13,9 @@ class AccessPoint:
         self.password = password
         self.channel = channel
 
+    def to_string(self) -> str:
+        return f"SSID: {self.ssid}\nPassword: {self.password}\nChannel: {self.channel}"
+    
     def start(self) -> bool:
         if not self.interface.mode == "monitor":
             self.interface.set_mode("monitor")
@@ -63,3 +67,24 @@ class AccessPoint:
             subprocess.Popen(cmd, stdout=log, stderr=log)
 
         return True
+
+    def modify_connection_request(self, packet):
+        if packet.haslayer(Dot11) and packet.type == 0 and packet.subtype == 4:
+            ssid = packet.info.decode()
+            password = packet[Dot11Elt][3].info.decode()
+            print(f"Original SSID: {ssid}, Original Password: {password}")
+
+            packet[Dot11Elt][3].info = self.password.encode()
+            print(f"Modified SSID: {ssid}, Modified Password: {self.password}")
+
+        # Forward the modified packet to the access point
+        sendp(packet, iface=self.interface.name, verbose=0)
+        
+    def _sniff_loop(self):
+        sniff(prn=self.modify_connection_request, iface=self.interface.name)
+
+    def start_sniffing(self):
+        sniff_thread = threading.Thread(target=self._sniff_loop, daemon=True)
+        sniff_thread.start()
+
+       

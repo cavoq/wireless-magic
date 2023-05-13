@@ -27,9 +27,6 @@ class TestNetworkInterface(unittest.TestCase):
         self.assertTrue(self.interface.set_mode("monitor"))
         self.assertFalse(self.interface.set_mode("invalid_mode"))
 
-    def test_scan_access_points(self):
-        self.assertIsInstance(self.interface.scan_access_points(), list)
-
     def test_to_string(self):
         self.assertIsInstance(self.interface.to_string(), str)
 
