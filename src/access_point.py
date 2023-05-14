@@ -1,7 +1,10 @@
 import subprocess
 import threading
 import time
-from scapy.all import Dot11, Dot11Elt, sniff, sendp
+from scapy.all import sniff, sendp
+from scapy import packet
+from scapy.layers import dot11
+from scapy.layers.dot11 import Packet
 from src.network_interface import NetworkInterface
 
 
@@ -59,13 +62,13 @@ class AccessPoint:
         time.sleep(1) # Wait for hostapd to start
         return True
 
-    def modify_connection_request(self, packet):
-        if packet.haslayer(Dot11) and packet.type == 0 and packet.subtype == 4:
+    def modify_connection_request(self, packet: Packet):
+        if packet.haslayer() and packet.type == 0 and packet.subtype == 4:
             ssid = packet.info.decode()
-            password = packet[Dot11Elt][3].info.decode()
+            password = packet[dot11.Dot11Elt][3].info.decode()
             print(f"Original SSID: {ssid}, Original Password: {password}")
 
-            packet[Dot11Elt][3].info = self.password.encode()
+            packet[dot11.Dot11Elt][3].info = self.password.encode()
             print(f"Modified SSID: {ssid}, Modified Password: {self.password}")
 
         # Forward the modified packet to the access point
