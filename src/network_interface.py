@@ -33,7 +33,6 @@ class NetworkInterface:
         self.down()
         cmd = f"sudo iwconfig {self.name} mode {mode}"
         result = subprocess.run(cmd.split(), capture_output=True)
-        print(result)
         if result.returncode != 0:
             return False
         self.up()

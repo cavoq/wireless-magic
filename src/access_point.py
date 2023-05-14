@@ -17,32 +17,22 @@ class AccessPoint:
         return f"SSID: {self.ssid}\nPassword: {self.password}\nChannel: {self.channel}"
     
     def start(self) -> bool:
-        if not self.interface.mode == "monitor":
+        if not self.interface.get_mode() == "monitor":
             self.interface.set_mode("monitor")
-        if not self._start_access_point():
-            return False
-        time.sleep(5)
+        if not self.start_access_point():
+            raise Exception("Failed to start access point")
         return True
 
     def stop(self) -> bool:
         cmd = ["sudo", "pkill", "hostapd"]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode != 0:
-            return False
-
-        if not self.interface.mode == "managed":
+            raise Exception("Failed to stop access point")
+        if not self.interface.get_mode() == "managed":
             self.interface.set_mode("managed")
         return True
 
-    def _set_interface_mode(self, mode: str) -> bool:
-        cmd = f"sudo iwconfig {self.interface} mode {mode}"
-        result = subprocess.run(cmd.split(), capture_output=True)
-        if result.returncode != 0:
-            return False
-
-        return True
-
-    def _start_access_point(self) -> bool:
+    def start_access_point(self) -> bool:
         with open("resources/hostapd-template.conf", "r") as f:
             config_template = f.read()
 
@@ -66,6 +56,7 @@ class AccessPoint:
         with open(log_file, "w") as log:
             subprocess.Popen(cmd, stdout=log, stderr=log)
 
+        time.sleep(1) # Wait for hostapd to start
         return True
 
     def modify_connection_request(self, packet):
