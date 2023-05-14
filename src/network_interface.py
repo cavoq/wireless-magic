@@ -6,18 +6,12 @@ class NetworkInterface:
 
     def __init__(self, name: str):
         self.name: str = name
-        self.mac_address: str = self.get_mac_address()
-        self.mode = self.get_mode()
-
-    def update(self) -> None:
-        self.mac_address = self.get_mac_address()
-        self.mode = self.get_mode()
 
     def get_mac_address(self) -> str:
         mac_address_file: str = f"/sys/class/net/{self.name}/address"
         if not os.path.exists(mac_address_file):
             raise FileNotFoundError("MAC address file not found.")
-        with open(mac_address_file, "r") as file:
+        with open(mac_address_file, 'r') as file:
             mac_address: str = file.read().strip()
         return mac_address
 
@@ -25,25 +19,24 @@ class NetworkInterface:
         mode_file: str = f"/sys/class/net/{self.name}/type"
         if not os.path.exists(mode_file):
             raise FileNotFoundError("Mode file not found.")
-        with open(mode_file, "r") as f:
-            mode: str = f.read().strip()
+        with open(mode_file, 'r') as file:
+            mode: str = file.read().strip()
         if mode == "1":
             return "managed"
         if mode == "803":
             return "monitor"
+        return "unknown"
 
-    def set_mode(self, mode: str, retries=3) -> bool:
+    def set_mode(self, mode: str) -> bool:
         if mode not in ["managed", "monitor"]:
-            return False
-        if self.is_busy():
-            self.reset()
-            self.set_mode(mode, retries=retries-1)
-        if mode == "monitor":
-            self.down()
+            raise ValueError("Mode must be either 'managed' or 'monitor'.")
+        self.down()
         cmd = f"sudo iwconfig {self.name} mode {mode}"
         result = subprocess.run(cmd.split(), capture_output=True)
+        print(result)
         if result.returncode != 0:
             return False
+        self.up()
         return True
 
     def down(self) -> bool:
@@ -62,18 +55,10 @@ class NetworkInterface:
 
     def reset(self) -> bool:
         if not self.down():
-            return False
+            raise RuntimeError("Failed to set interface down.")
         if not self.up():
-            return False
+            raise RuntimeError("Failed to set interface up.")
         return True
 
-    def is_busy(self) -> bool:
-        cmd = f"ip link show {self.name}"
-        result = subprocess.run(cmd.split(), capture_output=True, text=True)
-        if "state UP" in result.stdout and "state RUNNING" in result.stdout:
-            return True
-        else:
-            return False
-
     def to_string(self) -> str:
-        return f"Interface: {self.name}\nMAC Address: {self.mac_address}\nMode: {self.mode}"
+        return f"Interface: {self.name}\nMAC Address: {self.get_mac_address()}\nMode: {self.get_mode()}"
