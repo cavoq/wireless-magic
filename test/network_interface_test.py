@@ -1,13 +1,12 @@
 import unittest
 from src.network_interface import NetworkInterface
-
-MOCK_INTERFACE = "wlx00c0ca98ddf2"
+from test.mock import MOCK_INTERFACE
 
 
 class TestNetworkInterface(unittest.TestCase):
 
     def setUp(self):
-        self.interface = NetworkInterface(MOCK_INTERFACE)
+        self.interface = NetworkInterface(MOCK_INTERFACE["name"])
 
     def test_get_mac_address(self):
         self.assertIsInstance(self.interface.get_mac_address(), str)

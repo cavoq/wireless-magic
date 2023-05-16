@@ -1,15 +1,14 @@
 import unittest
+from test.mock import MOCK_INTERFACE
 from scapy.layers import dot11
 from src.access_point import AccessPoint
 from src.network_interface import NetworkInterface
-
-MOCK_INTERFACE = "wlx00c0ca98ddf2"
 
 
 class TestAccessPoint(unittest.TestCase):
 
     def setUp(self):
-        self.interface = NetworkInterface(MOCK_INTERFACE)
+        self.interface = NetworkInterface(MOCK_INTERFACE["name"])
         self.ssid = "TestAP"
         self.password = "testpassword"
         self.channel = 6
