@@ -1,5 +1,7 @@
+import time
 import unittest
-from test.mock import MOCK_INTERFACE
+from test.mock import MOCK_INTERFACE, CLIENT_INTERFACE
+from scapy.all import sendp
 from scapy.layers import dot11
 from src.access_point import AccessPoint
 from src.network_interface import NetworkInterface
@@ -23,5 +25,11 @@ class TestAccessPoint(unittest.TestCase):
         self.assertTrue(self.ap.stop())
 
     def test_sniff_connection_request(self):
-        connection_request = dot11.RadioTap()/dot11.Dot11(type=0, subtype=4, addr1="ff:ff:ff:ff:ff:ff",
-                                                          addr2="00:c0:ca:98:dd:f2", addr3="00:c0:ca:98:dd:f2")/dot11.Dot11ProbeReq()
+        self.ap.start()
+        self.ap.sniffer.start()
+        auth_request = dot11.Dot11(addr1=MOCK_INTERFACE["mac_address"], addr2=CLIENT_INTERFACE["mac_address"],
+                                   addr3=MOCK_INTERFACE["mac_address"]) / dot11.Dot11Auth(algo=0, seqnum=1, status=0)
+        sendp(auth_request, iface=CLIENT_INTERFACE["name"], verbose=0)
+        self.ap.sniffer.stop()
+        
+        
