@@ -18,7 +18,7 @@ lint: ## Run linter
 	@$(PYTHON) -m pylint $(NAME).py
 
 test: ## Run tests
-	$(PYTHON) -m pytest -s test/
+	sudo $(PYTHON) -m pytest -s test/
 
 docker-build: ## Build docker image
 	@docker build --no-cache -t $(NAME) .

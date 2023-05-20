@@ -30,6 +30,9 @@ class TestAccessPoint(unittest.TestCase):
         auth_request = dot11.Dot11(addr1=MOCK_INTERFACE["mac_address"], addr2=CLIENT_INTERFACE["mac_address"],
                                    addr3=MOCK_INTERFACE["mac_address"]) / dot11.Dot11Auth(algo=0, seqnum=1, status=0)
         sendp(auth_request, iface=CLIENT_INTERFACE["name"], verbose=0)
+        time.sleep(1)
+        sendp(auth_request, iface=CLIENT_INTERFACE["name"], verbose=0)
+        time.sleep(1)
         self.ap.sniffer.stop()
         
         
