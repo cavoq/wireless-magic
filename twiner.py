@@ -4,7 +4,9 @@ from typing import Dict, List
 import colorama
 from src.network_interface import *
 from src.access_point import *
+from src.config import Config
 
+CONFIG_FILE = "config.json"
 
 colorama.init()
 
@@ -71,7 +73,7 @@ class TwinerBot:
             self.capture_interface, "TestAP", "testpassword", 6)
         self.access_points.get("TestAP").start()
         self.access_points.get("TestAP").start_sniffing()
-        
+
     def get_wifi_interfaces(self) -> List[NetworkInterface]:
         wifi_interfaces = []
         net_dir: str = "/sys/class/net"
@@ -101,5 +103,6 @@ class TwinerBot:
 
 
 if __name__ == '__main__':
+    Config().from_json(CONFIG_FILE)
     twiner_bot: TwinerBot = TwinerBot()
     TwinerCmd().cmdloop()
