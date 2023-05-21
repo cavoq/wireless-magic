@@ -1,5 +1,4 @@
-import multiprocessing
-import time
+from multiprocessing import Process
 from scapy.all import sniff
 from scapy.layers.dot11 import Packet
 from scapy.layers import dot11
@@ -7,15 +6,16 @@ from typing import Callable
 
 
 class Sniffer:
+
     def __init__(self, iface_name: str, callback: Callable):
         self.iface_name = iface_name
         self.callback = callback
-        self.sniffer_process = None
+        self.sniffer_process: Process = None
 
     def start(self):
         if self.sniffer_process is not None:
             return
-        self.sniffer_process = multiprocessing.Process(
+        self.sniffer_process = Process(
             target=self.sniff_packets)
         self.sniffer_process.start()
 
@@ -34,4 +34,3 @@ class Sniffer:
         print(packet.summary())
         if packet.haslayer(dot11.Dot11Auth):
             self.callback(packet)
-

@@ -5,11 +5,13 @@ from scapy.all import sendp
 from scapy.layers import dot11
 from src.access_point import AccessPoint
 from src.network_interface import NetworkInterface
+from src.config import Config
 
 
 class TestAccessPoint(unittest.TestCase):
 
     def setUp(self):
+        Config.from_json("config.json")
         self.interface = NetworkInterface(MOCK_INTERFACE["name"])
         self.ssid = "TestAP"
         self.password = "testpassword"

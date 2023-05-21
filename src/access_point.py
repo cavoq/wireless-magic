@@ -1,11 +1,9 @@
 import subprocess
-import threading
 import time
-from scapy.all import sniff, sendp
-from scapy.layers import dot11
 from scapy.layers.dot11 import Packet
 from src.sniffer import Sniffer
 from src.network_interface import NetworkInterface
+from src.config import Config
 
 
 class AccessPoint:
@@ -54,13 +52,13 @@ class AccessPoint:
         with open(config_file, "w") as cfg_file:
             cfg_file.write(config)
 
-        log_file = f"logs/{self.ssid}.log"
+        log_file = f"{Config.log_dir}/{self.ssid}.log"
         cmd = ["sudo", "hostapd", config_file]
 
         with open(log_file, "w") as log:
             subprocess.Popen(cmd, stdout=log, stderr=log)
+            time.sleep(1) # Wait for hostapd to start
 
-        time.sleep(1)  # Wait for hostapd to start
         return True
 
 
