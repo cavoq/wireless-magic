@@ -5,6 +5,7 @@ import colorama
 from src.network_interface import *
 from src.access_point import *
 from src.config import Config
+from src.log import logger
 
 CONFIG_FILE = "config.json"
 
@@ -37,6 +38,7 @@ __________       _____________     __________________
 
     def do_quit(self, arg=None):
         print(f"{colorama.Fore.RED}Quitting...{colorama.Style.RESET_ALL}")
+        logger.info("Stopping Twiner bot...")
         return True
 
     def do_ifaces(self, arg=None):
@@ -69,27 +71,33 @@ class TwinerBot:
         self.capture_interface: NetworkInterface = None
 
     def run(self):
+        logger.info("Starting Twiner bot...")
         self.access_points["TestAP"] = AccessPoint(
             self.capture_interface, "TestAP", "testpassword", 6)
         self.access_points.get("TestAP").start()
-        self.access_points.get("TestAP").start_sniffing()
 
     def get_wifi_interfaces(self) -> List[NetworkInterface]:
+        logger.info("Getting wifi interfaces...")
         wifi_interfaces = []
         net_dir: str = "/sys/class/net"
         for interface in os.listdir(net_dir):
             if os.path.exists(os.path.join(net_dir, interface, "wireless")):
                 wifi_interfaces.append(NetworkInterface(interface))
+        logger.info(f"Found {len(wifi_interfaces)} wifi interfaces.")
         return wifi_interfaces
 
     def set_capture_interface(self, interface_name: str) -> bool:
+        logger.info(f"Setting capture interface to {interface_name}...")
         for interface in self.wifi_interfaces:
             if interface.name == interface_name:
                 self.capture_interface = interface
+                logger.info(f"Capture interface set to {interface_name}.")
                 return True
+        logger.warning(f"Interface {interface_name} not found.")
         return False
 
     def scan_access_points(self) -> None:
+        logger.info(f"Scanning for access points on {self.capture_interface.name}...")
         cmd = f"sudo iwlist {self.capture_interface.name} scan"
         output = subprocess.check_output(cmd.split()).decode("utf-8")
 
@@ -100,6 +108,7 @@ class TwinerBot:
             access_point = AccessPoint(
                 self.capture_interface, essid, "pass", channel)
             self.access_points[essid] = access_point
+        logger.info(f"Found {len(self.access_points)} access points.")
 
 
 if __name__ == '__main__':

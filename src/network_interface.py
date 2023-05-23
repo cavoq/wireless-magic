@@ -1,5 +1,6 @@
 import os
 import subprocess
+from src.log import logger
 
 
 class NetworkInterface:
@@ -28,14 +29,17 @@ class NetworkInterface:
         return "unknown"
 
     def set_mode(self, mode: str) -> bool:
+        logger.info(f"Setting interface {self.name} to mode {mode}...")
         if mode not in ["managed", "monitor"]:
             raise ValueError("Mode must be either 'managed' or 'monitor'.")
         self.down()
         cmd = f"sudo iwconfig {self.name} mode {mode}"
         result = subprocess.run(cmd.split(), capture_output=True)
         if result.returncode != 0:
+            logger.info(f"Failed to set interface {self.name} to mode {mode}.")
             return False
         self.up()
+        logger.info(f"Interface {self.name} is now in mode {mode}.")
         return True
 
     def down(self) -> bool:

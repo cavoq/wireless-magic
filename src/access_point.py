@@ -4,6 +4,7 @@ from scapy.layers.dot11 import Packet
 from src.sniffer import Sniffer
 from src.network_interface import NetworkInterface
 from src.config import Config
+from src.log import logger
 
 
 class AccessPoint:
@@ -19,19 +20,25 @@ class AccessPoint:
         return f"SSID: {self.ssid}\nPassword: {self.password}\nChannel: {self.channel}"
 
     def start(self) -> bool:
+        logger.info(f"Starting access point with config:\n{self.to_string()}")
         if not self.interface.get_mode() == "monitor":
             self.interface.set_mode("monitor")
         if not self.start_access_point():
+            logger.error("Failed to start access point.")
             raise Exception("Failed to start access point")
+        logger.info(f"Access point {self.ssid} started.")
         return True
 
     def stop(self) -> bool:
+        logger.info(f"Stopping access point {self.ssid}")
         cmd = ["sudo", "pkill", "hostapd"]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode != 0:
+            logger.error(f"Failed to stop access point {self.ssid}")
             raise Exception("Failed to stop access point")
         if not self.interface.get_mode() == "managed":
             self.interface.set_mode("managed")
+        logger.info(f"Access point {self.ssid} stopped")
         return True
 
     def start_access_point(self) -> bool:
