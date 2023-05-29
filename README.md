@@ -1,2 +1,2 @@
-# twiner
-Configurable rogue access point collector written in python
+# wireless_magic
+Command line tool for managing wireless network interfaces.

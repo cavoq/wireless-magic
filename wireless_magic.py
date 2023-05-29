@@ -12,69 +12,67 @@ CONFIG_FILE = "config.json"
 colorama.init()
 
 
-class TwinerCmd(cmd.Cmd):
+class WirelessMagicCmd(cmd.Cmd):
     intro = f"""{colorama.Fore.GREEN}
-__________       _____________     __________________
-\__   __/|\     /|\__   __/( (    /|(  ____ \(  ____ )
-   ) (   | )   ( |   ) (   |  \  ( || (    \/| (    )|
-   | |   | | _ | |   | |   |   \ | || (__    | (____)|
-   | |   | |( )| |   | |   | (\ \) ||  __)   |     __)
-   | |   | || || |   | |   | | \   || (      | (\ (   
-   | |   | () () |___) (___| )  \  || (____/\| ) \ \__
-   )_(   (_______)\_______/|/    )_)(_______/|/   \__/
-   
-   
-[+] Welcome to Twiner, a rogue access points attack bot.
-[clear] Clear the screen.
-[quit] Quit the program.
-[ifaces] Get list of available network interfaces.
-[iface <interface>] Set the network interface to use.
-[run] Run the bot.
+          _          _                                            _      
+         (_)        | |                                          (_)     
+__      ___ _ __ ___| | ___  ___ ___        _ __ ___   __ _  __ _ _  ___ 
+\ \ /\ / / | '__/ _ \ |/ _ \/ __/ __|______| '_ ` _ \ / _` |/ _` | |/ __|
+ \ V  V /| | | |  __/ |  __/\__ \__ \______| | | | | | (_| | (_| | | (__ 
+  \_/\_/ |_|_|  \___|_|\___||___/___/      |_| |_| |_|\__,_|\__, |_|\___|
+                                                             __/ |       
+                                                            |___/        
+                                                            
+[+] Welcome to wireless-magic, a tool to simplify wireless network operations.
+[cls] Clear the screen.
+[q] Quit the program.
+[i] Get list of available network interfaces.
+[is <interface_name>] Set capture interface.
+[ap] Get list of available access points.
 {colorama.Style.RESET_ALL}"""
     prompt = f"{colorama.Fore.BLUE}> {colorama.Style.RESET_ALL}"
 
-    def do_clear(self, arg=None):
+    def do_cls(self, arg=None):
         print(self.intro)
 
-    def do_quit(self, arg=None):
+    def do_q(self, arg=None):
         print(f"{colorama.Fore.RED}Quitting...{colorama.Style.RESET_ALL}")
-        logger.info("Stopping Twiner bot...")
+        logger.info("Stopping wireless-magic...")
         return True
 
-    def do_ifaces(self, arg=None):
-        for interface in twiner_bot.wifi_interfaces:
+    def do_i(self, arg=None):
+        for interface in wireless_magic.get_wifi_interfaces():
             print(f"{colorama.Fore.GREEN}{interface.to_string()}", end="\n\n")
 
-    def do_iface(self, arg=None):
-        if twiner_bot.capture_interface is not None and arg in [None, ""]:
+    def do_is(self, arg=None):
+        if wireless_magic.capture_interface is not None and arg in [None, ""]:
             print(
-                f"{colorama.Fore.RED}Selected interface is {twiner_bot.capture_interface.name}.{colorama.Style.RESET_ALL}")
+                f"{colorama.Fore.RED}Selected interface is {wireless_magic.capture_interface.name}.{colorama.Style.RESET_ALL}")
             return
-        if arg not in [interface.name for interface in twiner_bot.wifi_interfaces]:
+        if arg not in [interface.name for interface in wireless_magic.wifi_interfaces]:
             print(
                 f"{colorama.Fore.RED}Please specify a valid interface.{colorama.Style.RESET_ALL}")
             return
-        twiner_bot.set_capture_interface(arg)
+        wireless_magic.set_capture_interface(arg)
         print(f"{colorama.Fore.GREEN}Interface set to {arg}.{colorama.Style.RESET_ALL}")
 
-    def do_run(self, arg=None):
-        twiner_bot.scan_access_points()
-        twiner_bot.run()
+    def do_ap(self, arg=None):
+        if wireless_magic.capture_interface is None:
+            print(
+                f"{colorama.Fore.RED}Please select an interface first.{colorama.Style.RESET_ALL}")
+            return
+        wireless_magic.scan_access_points()
+        for access_point in wireless_magic.access_points.values():
+            print(f"{colorama.Fore.GREEN}{access_point.to_string()}", end="\n\n")
 
 
-class TwinerBot:
+class WirelessMagic:
 
     def __init__(self):
         self.wifi_interfaces: List[NetworkInterface] = self.get_wifi_interfaces(
         )
         self.access_points: Dict[str, AccessPoint] = {}
         self.capture_interface: NetworkInterface = None
-
-    def run(self):
-        logger.info("Starting Twiner bot...")
-        self.access_points["TestAP"] = AccessPoint(
-            self.capture_interface, "TestAP", "testpassword", 6)
-        self.access_points.get("TestAP").start()
 
     def get_wifi_interfaces(self) -> List[NetworkInterface]:
         logger.info("Getting wifi interfaces...")
@@ -97,21 +95,23 @@ class TwinerBot:
         return False
 
     def scan_access_points(self) -> None:
-        logger.info(f"Scanning for access points on {self.capture_interface.name}...")
+        logger.info(
+            f"Scanning for access points on {self.capture_interface.name}...")
         cmd = f"sudo iwlist {self.capture_interface.name} scan"
         output = subprocess.check_output(cmd.split()).decode("utf-8")
 
         essids = re.findall(r"ESSID:\"(.*)\"", output)
         channels = re.findall(r"Channel:(\d+)", output)
+        mac_addresses = re.findall(r"Address: ([0-9A-F:]+)", output)
 
-        for essid, channel in zip(essids, channels):
+        for essid, channel, mac_address in zip(essids, channels, mac_addresses):
             access_point = AccessPoint(
-                self.capture_interface, essid, "pass", channel)
+                self.capture_interface, essid, "pass", mac_address, channel)
             self.access_points[essid] = access_point
         logger.info(f"Found {len(self.access_points)} access points.")
 
 
 if __name__ == '__main__':
     Config().from_json(CONFIG_FILE)
-    twiner_bot: TwinerBot = TwinerBot()
-    TwinerCmd().cmdloop()
+    wireless_magic: WirelessMagic = WirelessMagic()
+    WirelessMagicCmd().cmdloop()

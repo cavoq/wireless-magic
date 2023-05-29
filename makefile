@@ -1,4 +1,4 @@
-NAME=twiner
+NAME=wireless_magic
 PYTHON=python3
 VERSION=0.0.1
 
@@ -18,7 +18,7 @@ lint: ## Run linter
 	@$(PYTHON) -m pylint $(NAME).py
 
 test: ## Run tests
-	sudo $(PYTHON) -m pytest -s test/
+	$(PYTHON) -m pytest -s test/
 
 docker-build: ## Build docker image
 	@docker build --no-cache -t $(NAME) .
